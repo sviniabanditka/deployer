@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployer-web-nginx
+  namespace: deployer
+  labels:
+    app: deployer-web
+    app.kubernetes.io/part-of: deployer
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml;
+
+        location /assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header X-Frame-Options "SAMEORIGIN" always;
+            add_header X-Content-Type-Options "nosniff" always;
+            add_header X-XSS-Protection "1; mode=block" always;
+            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deployer-web
+  namespace: deployer
+  labels:
+    app: deployer-web
+    app.kubernetes.io/part-of: deployer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: deployer-web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer-web
+  namespace: deployer
+  labels:
+    app: deployer-web
+    app.kubernetes.io/part-of: deployer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: deployer-web
+  template:
+    metadata:
+      labels:
+        app: deployer-web
+        app.kubernetes.io/part-of: deployer
+    spec:
+      containers:
+        - name: deployer-web
+          image: deployer-web:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: deployer-web-nginx

@@ -1,0 +1,36 @@
+# Binaries
+bin/
+*.exe
+
+# Dependencies
+api/vendor/
+web/node_modules/
+
+# Build output
+web/dist/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+data/
+
+# Logs
+*.log
+
+# Uploaded files
+uploads/
+
+docs/node_modules
+docs/.vitepress/dist

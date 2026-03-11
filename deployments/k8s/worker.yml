@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer-worker
+  namespace: deployer
+  labels:
+    app: deployer-worker
+    app.kubernetes.io/part-of: deployer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: deployer-worker
+  template:
+    metadata:
+      labels:
+        app: deployer-worker
+        app.kubernetes.io/part-of: deployer
+    spec:
+      containers:
+        - name: deployer-worker
+          image: deployer-worker:latest
+          envFrom:
+            - configMapRef:
+                name: deployer-config
+            - secretRef:
+                name: deployer-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: deployer-worker
+  namespace: deployer
+  labels:
+    app: deployer-worker
+    app.kubernetes.io/part-of: deployer
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deployer-worker
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
