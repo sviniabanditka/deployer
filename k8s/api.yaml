@@ -7,8 +7,8 @@ spec:
   selector:
     app: deployer-api
   ports:
-    - port: 3000
-      targetPort: 3000
+    - port: 8080
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -29,7 +29,7 @@ spec:
         - name: deployer-api
           image: registry.sviniabanditka.com/deployer-api:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           envFrom:
             - secretRef:
                 name: deployer-secrets
@@ -42,11 +42,11 @@ spec:
               cpu: 500m
           readinessProbe:
             tcpSocket:
-              port: 3000
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
-              port: 3000
+              port: 8080
             initialDelaySeconds: 15
             periodSeconds: 20

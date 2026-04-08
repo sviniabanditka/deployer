@@ -22,7 +22,7 @@ spec:
               service:
                 name: deployer-api
                 port:
-                  number: 3000
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
