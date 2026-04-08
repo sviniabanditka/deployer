@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer-worker
+  namespace: deployer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deployer-worker
+  template:
+    metadata:
+      labels:
+        app: deployer-worker
+    spec:
+      containers:
+        - name: deployer-worker
+          image: registry.sviniabanditka.com/deployer-worker:latest
+          envFrom:
+            - secretRef:
+                name: deployer-secrets
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 500m

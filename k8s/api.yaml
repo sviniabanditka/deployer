@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deployer-api
+  namespace: deployer
+spec:
+  selector:
+    app: deployer-api
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer-api
+  namespace: deployer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deployer-api
+  template:
+    metadata:
+      labels:
+        app: deployer-api
+    spec:
+      containers:
+        - name: deployer-api
+          image: registry.sviniabanditka.com/deployer-api:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: deployer-secrets
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
